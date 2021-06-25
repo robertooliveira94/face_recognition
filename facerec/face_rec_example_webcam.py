@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+# verificando versao
 # import platform
 # print(platform.python_version())
 # Para instalar face_recognition, instalar visual studio (c++)
@@ -8,6 +9,7 @@ import face_recognition
 import os
 import cv2
 
+# Setando variaveis
 os.chdir('C:/Users/rober/OneDrive/Documentos/git/face_recognition/facerec')
 # print(os.getcwd())
 
@@ -57,60 +59,67 @@ for name in os.listdir(KNOWN_FACES_DIR):
 print('Processing unknown faces...')
 # Now let's loop over a folder of faces we want to label
 # for filename in os.listdir(UNKNOWN_FACES_DIR):
+c_fora = 0
 while True:
 
     # Load image
     # print(f'Filename {filename}', end='')
     # image = face_recognition.load_image_file(f'{UNKNOWN_FACES_DIR}/{filename}')
 
-    ret, image = video.read()    
+    # Capture frame-by-frame
+    ret, image = video.read()
+    c_fora+=1
 
-    # This time we first grab face locations - we'll need them to draw boxes
-    locations = face_recognition.face_locations(image, model=MODEL)
+    if c_fora % 60 == 0:
+        print(c_fora)
+        print(image.shape)
 
-    # Now since we know loctions, we can pass them to face_encodings as second argument
-    # Without that it will search for faces once again slowing down whole process
-    encodings = face_recognition.face_encodings(image, locations)
+        # This time we first grab face locations - we'll need them to draw boxes
+        locations = face_recognition.face_locations(image, model=MODEL)
 
-    # We passed our image through face_locations and face_encodings, so we can modify it
-    # First we need to convert it from RGB to BGR as we are going to work with cv2
-    # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        # Now since we know loctions, we can pass them to face_encodings as second argument
+        # Without that it will search for faces once again slowing down whole process
+        encodings = face_recognition.face_encodings(image, locations)
 
-    # But this time we assume that there might be more faces in an image - we can find faces of dirrerent people
-    print(f', found {len(encodings)} face(s)')
-    for face_encoding, face_location in zip(encodings, locations):
+        # We passed our image through face_locations and face_encodings, so we can modify it
+        # First we need to convert it from RGB to BGR as we are going to work with cv2
+        # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-        # We use compare_faces (but might use face_distance as well)
-        # Returns array of True/False values in order of passed known_faces
-        results = face_recognition.compare_faces(known_faces, face_encoding, TOLERANCE)
+        # But this time we assume that there might be more faces in an image - we can find faces of dirrerent people
+        print(f', found {len(encodings)} face(s)')
+        for face_encoding, face_location in zip(encodings, locations):
 
-        # Since order is being preserved, we check if any face was found then grab index
-        # then label (name) of first matching known face withing a tolerance
-        match = None
-        if True in results:  # If at least one is true, get a name of first of found labels
-            match = known_names[results.index(True)]
-            print(f' - {match} from {results}')
+            # We use compare_faces (but might use face_distance as well)
+            # Returns array of True/False values in order of passed known_faces
+            results = face_recognition.compare_faces(known_faces, face_encoding, TOLERANCE)
 
-            # Each location contains positions in order: top, right, bottom, left
-            top_left = (face_location[3], face_location[0])
-            bottom_right = (face_location[1], face_location[2])
+            # Since order is being preserved, we check if any face was found then grab index
+            # then label (name) of first matching known face withing a tolerance
+            match = None
+            if True in results:  # If at least one is true, get a name of first of found labels
+                match = known_names[results.index(True)]
+                print(f' - {match} from {results}')
 
-            # Get color by name using our fancy function
-            color = name_to_color(match)
+                # Each location contains positions in order: top, right, bottom, left
+                top_left = (face_location[3], face_location[0])
+                bottom_right = (face_location[1], face_location[2])
 
-            # Paint frame
-            cv2.rectangle(image, top_left, bottom_right, color, FRAME_THICKNESS)
+                # Get color by name using our fancy function
+                color = name_to_color(match)
 
-            # Now we need smaller, filled grame below for a name
-            # This time we use bottom in both corners - to start from bottom and move 50 pixels down
-            top_left = (face_location[3], face_location[2])
-            bottom_right = (face_location[1], face_location[2] + 22)
+                # Paint frame
+                cv2.rectangle(image, top_left, bottom_right, color, FRAME_THICKNESS)
 
-            # Paint frame
-            cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
+                # Now we need smaller, filled grame below for a name
+                # This time we use bottom in both corners - to start from bottom and move 50 pixels down
+                top_left = (face_location[3], face_location[2])
+                bottom_right = (face_location[1], face_location[2] + 22)
 
-            # Wite a name
-            cv2.putText(image, match, (face_location[3] + 10, face_location[2] + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), FONT_THICKNESS)
+                # Paint frame
+                cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
+
+                # Wite a name
+                cv2.putText(image, match, (face_location[3] + 10, face_location[2] + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), FONT_THICKNESS)
 
     # Show image
     cv2.imshow(filename, image)
